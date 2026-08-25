@@ -1,0 +1,7 @@
+.git
+.github
+.idea
+artifacts
+coverage
+dist
+node_modules

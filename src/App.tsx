@@ -18,6 +18,7 @@ export function App() {
   const [agentUi, setAgentUi] = useState<AgentUiDocument>();
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
+  const [sessionId, setSessionId] = useState<string>();
   const client = useRef<RealtimeClient | undefined>(undefined);
   const messageInput = useRef<HTMLTextAreaElement>(null);
   const messageList = useRef<HTMLOListElement>(null);
@@ -38,6 +39,7 @@ export function App() {
     setPrincipal(undefined);
     setAgentUi(undefined);
     setMessages([]);
+    setSessionId(undefined);
     setConversationId(crypto.randomUUID());
     setStatus("Disconnected");
     setBusy(false);
@@ -88,6 +90,7 @@ export function App() {
     setMessages(current => [...current, { id: crypto.randomUUID(), role: "user", content }]);
     try {
       const result = await activeClient.sendTurn(conversationId, content, crypto.randomUUID());
+      setSessionId(result.sessionId);
       setMessages(current => [...current, {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -168,7 +171,7 @@ export function App() {
               <p className="privacy-note"><span aria-hidden="true">⌁</span> No cloud account required</p>
             </div>
           ) : (
-            <div className="conversation-card" data-view-id={agentUi?.viewId}>
+            <div className="conversation-card" data-view-id={agentUi?.viewId} data-conversation-id={conversationId} data-session-id={sessionId}>
               <div className="conversation-heading">
                 <div>
                   <p className="section-kicker">Private session</p>

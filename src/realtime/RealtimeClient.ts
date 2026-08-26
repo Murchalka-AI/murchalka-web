@@ -84,11 +84,12 @@ export class RealtimeClient {
     const response = this.asRecord(await this.exchange({ type: "turn", conversationId, text, idempotencyKey }));
     const result = this.asRecord(response.result);
     const message = this.asRecord(result.message);
-    if (response.type !== "turn.completed" || message.role !== "assistant" || typeof message.content !== "string") {
+    if (response.type !== "turn.completed" || typeof response.sessionId !== "string" ||
+        message.role !== "assistant" || typeof message.content !== "string") {
       throw new Error("Agent turn returned an invalid response.");
     }
 
-    return result as unknown as TurnResult;
+    return { ...result, sessionId: response.sessionId } as unknown as TurnResult;
   }
 
   public close(): void {

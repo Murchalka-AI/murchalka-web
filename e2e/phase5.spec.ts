@@ -9,12 +9,16 @@ test("completes an authenticated Phase 5 agent turn", async ({ page }) => {
   }
 
   await page.goto("/");
+  const realtimeEndpoint = process.env.MURCHALKA_E2E_REALTIME_ENDPOINT;
+  if (realtimeEndpoint !== undefined && realtimeEndpoint.length > 0) {
+    await page.getByLabel("Realtime endpoint").fill(realtimeEndpoint);
+  }
   await page.getByLabel("Username").fill(username);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Connect to Murchalka" }).click();
   await expect(page.getByRole("status")).toContainText("Signed in as");
 
-  await page.getByLabel("Message").fill("Reply with one short greeting.");
+  await page.getByRole("textbox", { name: "Message" }).fill("Reply with one short greeting.");
   await page.getByRole("button", { name: "Send message" }).click();
   const assistant = page.locator('li[data-role="assistant"]').last();
   await expect(assistant).toBeVisible({ timeout: 180_000 });

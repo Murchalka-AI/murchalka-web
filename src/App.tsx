@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { AgentMessage } from "./models/AgentMessage";
-import type { AgentUiDocument } from "./models/AgentUiDocument";
 import type { AuthenticatedPrincipal } from "./models/AuthenticatedPrincipal";
+import type { AgentUiDocument } from "@murchalka/client-runtime";
 import { RealtimeClient } from "./realtime/RealtimeClient";
 import { isAllowedRealtimeEndpoint } from "./security/isAllowedRealtimeEndpoint";
 import { isAllowedRuntimeEndpoint } from "./security/isAllowedRuntimeEndpoint";
@@ -108,7 +108,8 @@ export function App() {
     }
   };
 
-  const conversationLabel = agentUi?.componentTree.properties?.label ?? "Conversation";
+  const configuredLabel = agentUi?.componentTree.properties?.label;
+  const conversationLabel = typeof configuredLabel === "string" ? configuredLabel : "Conversation";
   const liveRegion = agentUi?.accessibility?.liveRegion === "assertive" ? "assertive" : "polite";
   const statusKind = busy ? "busy" : principal === undefined ? "offline" : "online";
 
@@ -119,12 +120,16 @@ export function App() {
       <main className="app-frame" aria-labelledby="title">
         <section className="brand-panel">
           <div className="brand-lockup">
-            <span className="brand-mark" aria-hidden="true">M</span>
+            <span className="brand-mark" aria-hidden="true">✦</span>
             <span>Murchalka</span>
+          </div>
+          <div className="portrait-shell">
+            <span className="portrait-aura" aria-hidden="true" />
+            <img className="character-portrait" src="/murchalka-girl.png" alt="Murchalka, an anime companion with violet hair" />
           </div>
           <div className="brand-copy">
             <p className="eyebrow"><span className="pulse" aria-hidden="true" /> Local-first companion</p>
-            <h1 id="title">A conversation that feels <em>alive.</em></h1>
+            <h1 id="title">Your world, <em>alive.</em></h1>
             <p className="brand-description">Private by default. Modular by design. Yours to shape.</p>
           </div>
           <ul className="trust-list" aria-label="Product qualities">
@@ -137,7 +142,7 @@ export function App() {
         <section className="workspace-panel">
           <div className="workspace-topbar">
             <div className="mobile-brand">
-              <span className="brand-mark" aria-hidden="true">M</span>
+              <span className="brand-mark" aria-hidden="true">✦</span>
               <span>Murchalka</span>
             </div>
             <p className={`status-chip ${statusKind}`} role="status">

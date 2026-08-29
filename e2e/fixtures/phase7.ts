@@ -19,14 +19,25 @@ const extension: ClientExtension = {
   version: "0.4.0",
   targets: ["web", "desktop"],
   mode: "wasm",
+  componentDefinitions: [{
+    id: "client.diagnostics.proof-card",
+    version: 1,
+    propertiesSchemaVersion: 1,
+    eventsSchemaVersion: 1,
+    propertiesSchema: { type: "object", additionalProperties: false, required: ["message"], properties: { message: { type: "string", maxLength: 256 } } },
+    eventsSchema: { type: "object", additionalProperties: false, required: ["type", "accepted", "diagnosticValue"], properties: { type: { const: "diagnostic.completed" }, accepted: { const: true }, diagnosticValue: { const: 7 } } },
+    template: { component: "standard.layout", properties: { direction: "column" }, children: [
+      { component: "standard.text", properties: { text: { $bind: "message.title" } } },
+      { component: "extension-host", id: "proof", properties: { export: "diagnostic_value", resultLabel: { $bind: "message.result" } } },
+      { component: "standard.action", properties: { label: { $bind: "message.run" }, action: "client.diagnostics.run", payload: { message: "Phase 7" } } },
+    ] },
+  }],
   componentTree: { component: "standard.layout", properties: { direction: "column" }, children: [
-    { component: "standard.text", properties: { text: "Client Runtime diagnostics" } },
-    { component: "extension-host", id: "proof", properties: { export: "diagnostic_value", resultLabel: "Sandboxed component proof value" } },
-    { component: "standard.action", properties: { label: "Run server check", action: "client.diagnostics.run", payload: { message: "Phase 7" } } },
+    { component: "client.diagnostics.proof-card", id: "proof-card", properties: { message: "Phase 7" } },
   ] },
   actions: [{ id: "client.diagnostics.run", handlerModule: "dev.murchalka.client-diagnostics", payloadSchemaVersion: 1 }],
   accessibility: { label: "Client Runtime diagnostics", description: "Phase 7 acceptance", liveRegion: "polite" },
-  localization: { defaultLocale: "en", messages: { en: {} } },
+  localization: { defaultLocale: "en", messages: { en: { title: "Client Runtime diagnostics", result: "Sandboxed component proof value", run: "Run server check" }, ru: { title: "Диагностика Client Runtime", result: "Результат изолированного компонента", run: "Запустить проверку сервера" } } },
   fallbackComponent: "standard.document",
   wasmBase64: wasm,
   propertiesSchemaVersion: 1,
@@ -62,10 +73,14 @@ async function run(): Promise<void> {
     securityPolicy: defaultClientSecurityPolicy,
     actionTransport: { dispatch: async request => {
       document.getElementById("action-result")!.textContent = `${request.actionId}:accepted`;
-      return { accepted: true };
+      return { type: "diagnostic.completed", accepted: true, diagnosticValue: 7 };
     } },
   });
   await runtime.activateCatalog(snapshot(1, [validEntry]));
+  document.getElementById("apps")!.addEventListener("murchalka:component-event", event => {
+    const detail = (event as CustomEvent<{ readonly componentId: string }>).detail;
+    document.getElementById("event-result")!.textContent = detail.componentId;
+  });
   await runtime.render(document.getElementById("apps")!, "en", error => { throw error; });
 
   const badDocument = { ...signed, signature: { ...signed.signature, value: btoa(String.fromCharCode(...new Uint8Array(64))) } };
@@ -76,11 +91,19 @@ async function run(): Promise<void> {
   try { await runtime.activateCatalog(snapshot(2, [entry(badDigest, badBytes.byteLength)])); } catch { rejected = true; }
   if (!rejected || runtime.revision !== 1) throw new Error("unsigned rollback gate failed");
 
+  const corruptWasm = await envelope({ ...extension, wasmBase64: "AA==" }, keys.privateKey, publisher.keyId);
+  const corruptWasmBytes = encode(corruptWasm);
+  const corruptWasmDigest = await new DigestVerifier().compute(corruptWasmBytes);
+  artifacts.set(corruptWasmDigest, corruptWasmBytes);
+  rejected = false;
+  try { await runtime.activateCatalog(snapshot(3, [entry(corruptWasmDigest, corruptWasmBytes.byteLength)])); } catch { rejected = true; }
+  if (!rejected || runtime.revision !== 1) throw new Error("WASM activation rollback gate failed");
+
   const offline = new ExtensionRegistry("web", { fetch: async () => { throw new Error("network must not be used"); } }, cache, new ExtensionSignatureVerifier([publisher]), defaultClientSecurityPolicy);
   await offline.activate(snapshot(1, [validEntry]));
   const fallback = new ExtensionRegistry("mobile", { fetch: async () => { throw new Error("fallback must not fetch"); } }, new MemoryVerifiedExtensionCache(), new ExtensionSignatureVerifier([publisher]), defaultClientSecurityPolicy);
   const fallbackState = await fallback.activate(snapshot(1, [validEntry]));
-  if (!fallbackState.extensions[0]?.isFallback || fetches !== 2) throw new Error("offline or fallback gate failed");
+  if (!fallbackState.extensions[0]?.isFallback || fetches !== 3) throw new Error("offline or fallback gate failed");
 
   const button = document.querySelector<HTMLButtonElement>("#apps button");
   if (button === null) throw new Error("custom action was not rendered");

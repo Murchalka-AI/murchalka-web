@@ -1,6 +1,6 @@
 {
   "name": "@murchalka/web",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@murchalka/client-runtime": "file:vendor/murchalka-client-runtime-0.4.0-74042a04.tgz",
+    "@murchalka/client-runtime": "file:vendor/murchalka-ai-client-runtime-0.4.2.tgz",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

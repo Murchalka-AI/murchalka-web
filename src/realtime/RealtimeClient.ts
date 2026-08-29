@@ -1,10 +1,10 @@
-import type { AgentUiDocument } from "../models/AgentUiDocument";
 import type { AuthenticatedPrincipal } from "../models/AuthenticatedPrincipal";
 import type { TurnResult } from "../models/TurnResult";
 import { isAllowedRealtimeEndpoint } from "../security/isAllowedRealtimeEndpoint";
-import type { ClientActionRequest, ClientActionTransport } from "@murchalka/client-runtime";
+import { AgentUiRuntime, defaultClientSecurityPolicy, type AgentUiDocument, type ClientActionRequest, type ClientActionTransport } from "@murchalka/client-runtime";
 
 export class RealtimeClient implements ClientActionTransport {
+  private readonly agentUi = new AgentUiRuntime(defaultClientSecurityPolicy);
   private socket: WebSocket | undefined;
   private readonly pending: Array<{
     readonly resolve: (value: unknown) => void;
@@ -69,16 +69,10 @@ export class RealtimeClient implements ClientActionTransport {
 
   public async getAgentUi(conversationId: string): Promise<AgentUiDocument> {
     const response = this.asRecord(await this.exchange({ type: "ui.get", conversationId }));
-    const document = this.asRecord(response.document);
-    const componentTree = this.asRecord(document.componentTree);
-    const actions = Array.isArray(document.actions) ? document.actions : [];
-    if (response.type !== "ui.document" || typeof document.viewId !== "string" ||
-        componentTree.component !== "standard.layout" ||
-        !actions.some(action => this.asRecord(action).id === "agent.turn")) {
-      throw new Error("The Agent UI document is not compatible with this shell.");
-    }
-
-    return document as unknown as AgentUiDocument;
+    if (response.type !== "ui.document") throw new Error("The server returned an invalid Agent UI response.");
+    const snapshot = this.agentUi.activate(response.document);
+    if (!snapshot.document.actions.some(action => action.id === "agent.turn")) throw new Error("The Agent UI document does not declare the required turn action.");
+    return snapshot.document;
   }
 
   public async sendTurn(conversationId: string, text: string, idempotencyKey: string): Promise<TurnResult> {

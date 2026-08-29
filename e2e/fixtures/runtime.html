@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://127.0.0.1:* http://localhost:*; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; style-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Installed Client Runtime acceptance</title>
+</head>
+<body>
+  <main>
+    <p id="state" role="status" aria-live="polite">starting</p>
+    <p>Verified artifact downloads: <output id="download-count">0</output></p>
+    <div id="apps"></div>
+    <output id="event-result"></output>
+  </main>
+  <script type="module" src="./runtime.ts"></script>
+</body>
+</html>

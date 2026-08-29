@@ -1,4 +1,4 @@
-const allowedHosts = new Set(["127.0.0.1", "[::1]", "::1"]);
+const allowedHosts = new Set(["127.0.0.1"]);
 
 export function isAllowedRealtimeEndpoint(value: string): boolean {
   try {

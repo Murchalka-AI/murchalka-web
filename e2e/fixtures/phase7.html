@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; style-src 'self'; object-src 'none'; base-uri 'none'">
+  <title>Phase 7 Client Runtime acceptance</title>
+</head>
+<body>
+  <main>
+    <p id="state" role="status">starting</p>
+    <div id="apps"></div>
+    <div id="fallback"></div>
+    <output id="action-result"></output>
+  </main>
+  <script type="module" src="./phase7.ts"></script>
+</body>
+</html>

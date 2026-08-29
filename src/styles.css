@@ -181,6 +181,14 @@
   .conversation-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
   .conversation-heading .section-kicker { margin: 0 0 .35rem; }
   .conversation-heading h2 { font-size: 1.75rem; }
+  .mini-apps { margin-top: .8rem; padding: .8rem; border: 1px solid var(--line); border-radius: .9rem; background: var(--mint-100); }
+  .mini-apps-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .mini-apps-heading h3 { margin: 0; font: 600 1rem Georgia, "Times New Roman", serif; }
+  .mini-apps-heading small { color: var(--muted); font-size: .62rem; }
+  .mini-apps-host:empty { display: none; }
+  .murchalka-mini-app { margin-top: .7rem; padding: .75rem; border-radius: .7rem; background: #fff; }
+  .murchalka-mini-app p { margin: 0 0 .55rem; font-size: .75rem; }
+  .murchalka-mini-app button { padding: .55rem .75rem; border-radius: .6rem; color: #fff; background: var(--forest-800); font-size: .68rem; font-weight: 750; }
   .quiet { padding: .55rem .8rem; border: 1px solid var(--line); border-radius: .7rem; color: var(--forest-700); background: transparent; font-size: .68rem; font-weight: 750; }
   .messages { flex: 1; min-height: 14rem; margin: 0; padding: 1.25rem .2rem; overflow: auto; list-style: none; scrollbar-color: #bccac0 transparent; }
   .messages li:not(.empty-state) { max-width: 84%; margin-bottom: .75rem; padding: .75rem .9rem; border-radius: 1rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .82rem; line-height: 1.55; }

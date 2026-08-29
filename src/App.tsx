@@ -4,11 +4,15 @@ import type { AgentUiDocument } from "./models/AgentUiDocument";
 import type { AuthenticatedPrincipal } from "./models/AuthenticatedPrincipal";
 import { RealtimeClient } from "./realtime/RealtimeClient";
 import { isAllowedRealtimeEndpoint } from "./security/isAllowedRealtimeEndpoint";
+import { isAllowedRuntimeEndpoint } from "./security/isAllowedRuntimeEndpoint";
+import { MiniApps } from "./MiniApps";
 
 const defaultEndpoint = "ws://127.0.0.1:5080/v1/realtime";
+const defaultRuntimeEndpoint = "http://127.0.0.1:5078/";
 
 export function App() {
   const [endpoint, setEndpoint] = useState(defaultEndpoint);
+  const [runtimeEndpoint, setRuntimeEndpoint] = useState(defaultRuntimeEndpoint);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [draft, setDraft] = useState("");
@@ -47,8 +51,8 @@ export function App() {
 
   const login = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    if (!isAllowedRealtimeEndpoint(endpoint)) {
-      setStatus("Only an explicit loopback realtime endpoint is allowed.");
+    if (!isAllowedRealtimeEndpoint(endpoint) || !isAllowedRuntimeEndpoint(runtimeEndpoint)) {
+      setStatus("Only explicit loopback Runtime and realtime endpoints are allowed.");
       return;
     }
 
@@ -154,6 +158,11 @@ export function App() {
                   <input value={endpoint} onChange={event => setEndpoint(event.target.value)} inputMode="url" spellCheck="false" required disabled={busy} />
                   <small><span aria-hidden="true">●</span> Loopback connections only</small>
                 </label>
+                <label className="endpoint-field">
+                  <span>Runtime endpoint</span>
+                  <input value={runtimeEndpoint} onChange={event => setRuntimeEndpoint(event.target.value)} inputMode="url" spellCheck="false" required disabled={busy} />
+                  <small><span aria-hidden="true">●</span> Signed extensions from loopback only</small>
+                </label>
                 <div className="credential-grid">
                   <label>
                     <span>Username</span>
@@ -179,6 +188,7 @@ export function App() {
                 </div>
                 <button type="button" className="quiet" onClick={disconnect}>Disconnect</button>
               </div>
+              {client.current !== undefined && <MiniApps runtimeEndpoint={runtimeEndpoint} actionTransport={client.current} />}
               <ol ref={messageList} className="messages" aria-live={liveRegion} aria-relevant="additions">
                 {messages.length === 0 && (
                   <li className="empty-state">

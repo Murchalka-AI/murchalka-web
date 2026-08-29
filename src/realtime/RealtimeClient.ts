@@ -2,8 +2,9 @@ import type { AgentUiDocument } from "../models/AgentUiDocument";
 import type { AuthenticatedPrincipal } from "../models/AuthenticatedPrincipal";
 import type { TurnResult } from "../models/TurnResult";
 import { isAllowedRealtimeEndpoint } from "../security/isAllowedRealtimeEndpoint";
+import type { ClientActionRequest, ClientActionTransport } from "@murchalka/client-runtime";
 
-export class RealtimeClient {
+export class RealtimeClient implements ClientActionTransport {
   private socket: WebSocket | undefined;
   private readonly pending: Array<{
     readonly resolve: (value: unknown) => void;
@@ -90,6 +91,13 @@ export class RealtimeClient {
     }
 
     return { ...result, sessionId: response.sessionId } as unknown as TurnResult;
+  }
+
+  public async dispatch(request: ClientActionRequest, signal?: AbortSignal): Promise<unknown> {
+    if (signal?.aborted === true) throw new DOMException("Client action was cancelled.", "AbortError");
+    const response = this.asRecord(await this.exchange({ type: "action.dispatch", ...request }));
+    if (response.type !== "action.completed" || !("result" in response)) throw new Error("Client action returned an invalid response.");
+    return response.result;
   }
 
   public close(): void {

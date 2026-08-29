@@ -18,3 +18,5 @@ jobs:
       - run: npm run check
       - name: Verify production assets
         run: test -s dist/index.html && test -n "$(find dist/assets -type f -name '*.js' -print -quit)"
+      - name: Verify production container
+        run: docker build --tag murchalka-web:ci .

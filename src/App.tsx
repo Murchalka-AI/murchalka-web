@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
 import type { AgentMessage } from "./models/AgentMessage";
 import type { AuthenticatedPrincipal } from "./models/AuthenticatedPrincipal";
 import type { AgentUiDocument } from "@murchalka/client-runtime";
@@ -6,6 +6,7 @@ import { RealtimeClient } from "./realtime/RealtimeClient";
 import { isAllowedRealtimeEndpoint } from "./security/isAllowedRealtimeEndpoint";
 import { isAllowedRuntimeEndpoint } from "./security/isAllowedRuntimeEndpoint";
 import { MiniApps } from "./MiniApps";
+import { isSendShortcut } from "./composer/isSendShortcut";
 
 const defaultEndpoint = "ws://127.0.0.1:5080/v1/realtime";
 const defaultRuntimeEndpoint = "http://127.0.0.1:5078/";
@@ -108,6 +109,12 @@ export function App() {
     }
   };
 
+  const handleComposerKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (!isSendShortcut(event.key, event.shiftKey, event.nativeEvent.isComposing)) return;
+    event.preventDefault();
+    if (!busy && draft.trim().length > 0) event.currentTarget.form?.requestSubmit();
+  };
+
   const configuredLabel = agentUi?.componentTree.properties?.label;
   const conversationLabel = typeof configuredLabel === "string" ? configuredLabel : "Conversation";
   const liveRegion = agentUi?.accessibility?.liveRegion === "assertive" ? "assertive" : "polite";
@@ -121,22 +128,12 @@ export function App() {
         <section className="brand-panel">
           <div className="brand-lockup">
             <span className="brand-mark" aria-hidden="true">✦</span>
-            <span>Murchalka</span>
+            <span id="title">Murchalka</span>
           </div>
           <div className="portrait-shell">
             <span className="portrait-aura" aria-hidden="true" />
             <img className="character-portrait" src="/murchalka-girl.png" alt="Murchalka, an anime companion with violet hair" />
           </div>
-          <div className="brand-copy">
-            <p className="eyebrow"><span className="pulse" aria-hidden="true" /> Local-first companion</p>
-            <h1 id="title">Your world, <em>alive.</em></h1>
-            <p className="brand-description">Private by default. Modular by design. Yours to shape.</p>
-          </div>
-          <ul className="trust-list" aria-label="Product qualities">
-            <li><span aria-hidden="true">⌂</span><strong>Local</strong><small>Runs on your device</small></li>
-            <li><span aria-hidden="true">◇</span><strong>Private</strong><small>Your data stays yours</small></li>
-            <li><span aria-hidden="true">✦</span><strong>Modular</strong><small>Built to evolve</small></li>
-          </ul>
         </section>
 
         <section className="workspace-panel">
@@ -213,12 +210,15 @@ export function App() {
                   id="message"
                   value={draft}
                   onChange={event => setDraft(event.target.value)}
+                  onKeyDown={handleComposerKeyDown}
                   placeholder="Write a message…"
                   maxLength={32768}
-                  rows={3}
+                  rows={2}
+                  aria-describedby="composer-hint"
                   required
                   disabled={busy}
                 />
+                <small id="composer-hint" className="composer-hint">Enter to send · Shift+Enter for a new line</small>
                 <button className="send-button" type="submit" disabled={busy} aria-label={busy ? "Waiting for response" : "Send message"}>↑</button>
               </form>
             </div>
